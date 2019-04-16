@@ -37,13 +37,14 @@ public class SimpleFTPServer {
             format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
             socket.receive(packetReceived);
 
+            seq = decodeNum(4, dataReceived, 0);
+
             // probabilistic loss service
             if (rand.nextFloat() < p) {
-                format(CHANNEL_SERVER, "*********** Data packet lost randomly ***********\r\n");
+                System.out.println("Packet loss, sequence number = " + seq);
                 continue;
             }
 
-            seq = decodeNum(4, dataReceived, 0);
             checksum = (int) decodeNum(2, dataReceived, 4);
             mark = (int) decodeNum(2, dataReceived, 6);
             if (END_MARK == mark) break;

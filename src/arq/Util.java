@@ -8,9 +8,11 @@ class Util {
     static final int CHANNEL_CLIENT_SEND = 2;
     static final int CHANNEL_CLIENT_RECEIVE = 4;
     static final int CHANNEL_CONTENT = 8;
-    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
-//    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
-//    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
+    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
+//    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
+//    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
+//    private static int CHANNEL_LIST = 0;
+
     static final int BUFF_SIZE = 2*1024;
     static final int HEADER_SIZE = 8;
     static final byte ACK_PACKET = (byte) 0b10101010;
