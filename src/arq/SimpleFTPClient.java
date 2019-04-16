@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class SimpleFTPClient {
+    static final int DATA_PACKET = 0b01010101;
     public static void main(String[] args) throws IOException {
         String host = args[0];
         int serverPort = Integer.parseInt(args[1]);
