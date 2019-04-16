@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static arq.Util.*;
 
 public class SimpleFTPServer {
-    private static int ARTIFICIAL_DELAY = 1;
+    private static int ARTIFICIAL_DELAY = 0;
     // Disable fire wall before use, or the server cannot receive UDP packet:
     // >sudo ufw disable
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -30,10 +31,18 @@ public class SimpleFTPServer {
         InetAddress address;
 
         int checksum, mark;
+        Random rand = new Random();
         for (long ack = 0, seq; true; ) {
             // Receive packet
-            format(CHANNEL_SERVER, "----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
+            format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
             socket.receive(packetReceived);
+
+            // probabilistic loss service
+            if (rand.nextFloat() < p) {
+                format(CHANNEL_SERVER, "*********** Data packet lost randomly ***********\r\n");
+                continue;
+            }
+
             seq = decodeNum(4, dataReceived, 0);
             checksum = (int) decodeNum(2, dataReceived, 4);
             mark = (int) decodeNum(2, dataReceived, 6);
@@ -47,7 +56,7 @@ public class SimpleFTPServer {
                 continue;
 
             // Output to local
-            println(CHANNEL_SERVER_CONTENT, new String(
+            println(CHANNEL_SERVER | CHANNEL_CONTENT, new String(
                     dataReceived,
                     HEADER_SIZE,
                     packetReceived.getLength() - HEADER_SIZE));

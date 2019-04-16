@@ -29,8 +29,8 @@ public class SimpleFTPClientThread extends Thread {
 
                 ack = decodeNum(4, data, 0);
 
-                format(CHANNEL_CLIENT_RECEIVE, "<Server>: %s\r\n", bytes2Binary(data, 0, 4));
-                format(CHANNEL_CLIENT_RECEIVE, "<Server>: %s\r\n", bytes2Binary(data, 4, 4));
+                format(CHANNEL_CLIENT_RECEIVE | CHANNEL_CONTENT, "<Server>: %s\r\n", bytes2Binary(data, 0, 4));
+                format(CHANNEL_CLIENT_RECEIVE | CHANNEL_CONTENT, "<Server>: %s\r\n", bytes2Binary(data, 4, 4));
             }catch (SocketException e) {
                 println(CHANNEL_CLIENT_RECEIVE, "Thread interrupted!");
             } catch (IOException e) {

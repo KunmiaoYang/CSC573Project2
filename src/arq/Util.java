@@ -5,9 +5,9 @@ import java.net.InetAddress;
 
 class Util {
     static final int CHANNEL_SERVER = 1;
-    static final int CHANNEL_SERVER_CONTENT = 8;
     static final int CHANNEL_CLIENT_SEND = 2;
     static final int CHANNEL_CLIENT_RECEIVE = 4;
+    static final int CHANNEL_CONTENT = 8;
     private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
 //    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
 //    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
@@ -32,11 +32,11 @@ class Util {
             12, 6, 7, 9
     };
     static void println(int channel, String s) {
-        if ((channel & CHANNEL_LIST) > 0)
+        if ((channel & CHANNEL_LIST) == channel)
             System.out.println(s);
     }
     static void format(int channel, String s, Object... args) {
-        if ((channel & CHANNEL_LIST) > 0)
+        if ((channel & CHANNEL_LIST) == channel)
             System.out.format(s, args);
     }
     static int calcChecksum(int checksum, byte[] data, int start, int end) {

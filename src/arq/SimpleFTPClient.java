@@ -55,7 +55,7 @@ public class SimpleFTPClient {
                 format(CHANNEL_CLIENT_SEND,
                         "----------- ACK = %d, seq = %d, p = %d, Send data packet [%d] -----------\r\n",
                         ack, seq, p, decodeNum(4, data, 0));
-                println(CHANNEL_CLIENT_SEND, new String(data, HEADER_SIZE, packet.getLength()));
+                println(CHANNEL_CLIENT_SEND | CHANNEL_CONTENT, new String(data, HEADER_SIZE, packet.getLength()));
             }
             format(CHANNEL_CLIENT_SEND,
                     "----------- ACK = %d, seq = %d, readSize = %d, Transmission terminated! -----------\r\n",
