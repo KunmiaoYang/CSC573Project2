@@ -30,8 +30,7 @@ public class SimpleFTPServer {
         int checksum, mark;
         for (long ack = 0, seq; true; ) {
             // Receive packet
-            format(
-                    "----------- Waiting for client data [%d] ... -----------\r\n", ack);
+            format(CHANNEL_SERVER, "----------- Waiting for client data [%d] ... -----------\r\n", ack);
             socket.receive(packetReceived);
             seq = decodeNum(4, dataReceived, 0);
             checksum = (int) decodeNum(2, dataReceived, 4);
@@ -41,7 +40,7 @@ public class SimpleFTPServer {
             if (calcChecksum(checksum, dataReceived, HEADER_SIZE) != 0) continue;
 
             // Output to local
-            println(new String(
+            println(CHANNEL_SERVER, new String(
                     dataReceived,
                     HEADER_SIZE,
                     packetReceived.getLength() - HEADER_SIZE));
@@ -55,6 +54,6 @@ public class SimpleFTPServer {
         }
         socket.close();
 
-        println("Server closed!");
+        println(CHANNEL_SERVER, "Server closed!");
     }
 }

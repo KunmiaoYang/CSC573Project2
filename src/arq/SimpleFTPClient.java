@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayDeque;
 
 import static arq.Util.*;
 
 public class SimpleFTPClient {
+    static int seq;
     public static void main(String[] args) throws IOException {
         String host = args[0];
         int serverPort = Integer.parseInt(args[1]);
@@ -24,29 +26,27 @@ public class SimpleFTPClient {
         data[7] = DATA_PACKET;
 
         try (InputStream is = new FileInputStream(filePath)) {
-            int checksum;
-            for (int seq = 0, readSize = is.read(data, HEADER_SIZE, MSS);
+            ArrayDeque<DatagramPacket> outgoing = new ArrayDeque<>(N);
+            SimpleFTPClientThread thread = new SimpleFTPClientThread(socket, outgoing);
+            thread.start();
+            seq = 0;
+            for (int readSize = is.read(data, HEADER_SIZE, MSS);
                  readSize != -1;
                  seq++, readSize = is.read(data, HEADER_SIZE, MSS)) {
                 // create packet
                 DatagramPacket packet = createDataPacket(seq, data, readSize, address, serverPort);
+                outgoing.offerLast(packet);
 
                 // send packet
                 socket.send(packet);
-                format("----------- Send data packet [%d] -----------\r\n", seq);
-                println(new String(data, HEADER_SIZE, readSize));
+                format(CHANNEL_CLIENT_SEND, "----------- Send data packet [%d] -----------\r\n", seq);
+                println(CHANNEL_CLIENT_SEND, new String(data, HEADER_SIZE, readSize));
             }
         }
 
         // Send end packet
         socket.send(createEndPacket(address, serverPort));
 
-//        byte[] data2 = new byte[1024];
-//        DatagramPacket packet2 = new DatagramPacket(data2, data2.length);
-//        System.out.println("Waiting for server response...");
-//        socket.receive(packet2);
-//        String reply = new String(data2, 0, packet2.getLength());
-//        System.out.println("<Server>: " + reply);
         socket.close();
     }
 }

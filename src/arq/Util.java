@@ -4,7 +4,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 
 class Util {
-    private static final boolean TEST_MODE = true;
+    static final int CHANNEL_SERVER = 1;
+    static final int CHANNEL_CLIENT_SEND = 2;
+    static final int CHANNEL_CLIENT_RECEIVE = 4;
+    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
+//    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
     static final int BUFF_SIZE = 2*1024;
     static final int HEADER_SIZE = 8;
     static final byte ACK_PACKET = (byte) 0b10101010;
@@ -25,12 +29,12 @@ class Util {
             10, 12, 14, 5,
             12, 6, 7, 9
     };
-    static void println(String s) {
-        if (TEST_MODE)
+    static void println(int channel, String s) {
+        if ((channel & CHANNEL_LIST) > 0)
             System.out.println(s);
     }
-    static void format(String s, Object... args) {
-        if (TEST_MODE)
+    static void format(int channel, String s, Object... args) {
+        if ((channel & CHANNEL_LIST) > 0)
             System.out.format(s, args);
     }
     static int calcChecksum(int checksum, byte[] data, int start) {
@@ -72,5 +76,11 @@ class Util {
         return new DatagramPacket(
                 END_DATA, HEADER_SIZE,
                 address, port);
+    }
+    static String bytes2Binary(byte[] data, int start, int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length && start + i < data.length; i++)
+            sb.append(' ').append(Integer.toBinaryString(data[start + i]&MASK8));
+        return sb.substring(1);
     }
 }
