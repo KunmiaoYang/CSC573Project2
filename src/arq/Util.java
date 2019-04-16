@@ -5,9 +5,11 @@ import java.net.InetAddress;
 
 class Util {
     static final int CHANNEL_SERVER = 1;
+    static final int CHANNEL_SERVER_CONTENT = 8;
     static final int CHANNEL_CLIENT_SEND = 2;
     static final int CHANNEL_CLIENT_RECEIVE = 4;
-    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
+    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
+//    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
 //    private static final int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
     static final int BUFF_SIZE = 2*1024;
     static final int HEADER_SIZE = 8;
@@ -37,8 +39,8 @@ class Util {
         if ((channel & CHANNEL_LIST) > 0)
             System.out.format(s, args);
     }
-    static int calcChecksum(int checksum, byte[] data, int start) {
-        for (int i = start; i < data.length; i += 2) {
+    static int calcChecksum(int checksum, byte[] data, int start, int end) {
+        for (int i = start; i < end; i += 2) {
             checksum += (data[i] << 8);
             if (i + 1 < data.length)
                 checksum += data[i + 1];
@@ -62,11 +64,13 @@ class Util {
         return num;
     }
     static DatagramPacket createDataPacket(
-            int seq, byte[] data, int dataSize,
+            long seq, byte[] data, int dataSize,
             InetAddress address, int port) {
-        int checksum = calcChecksum(0, data, HEADER_SIZE);
+        int checksum = calcChecksum(0, data, HEADER_SIZE, HEADER_SIZE + dataSize);
         encodeNum(seq, 4, data, 0);
         encodeNum(checksum, 2, data, 4);
+        data[6] = DATA_PACKET;
+        data[7] = DATA_PACKET;
         return new DatagramPacket(
                 data, HEADER_SIZE + dataSize,
                 address, port);

@@ -3,15 +3,16 @@ package arq;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.Deque;
+import java.net.SocketException;
 
+import static arq.SimpleFTPClient.ack;
 import static arq.Util.*;
 
 public class SimpleFTPClientThread extends Thread {
     DatagramSocket socket;
-    Deque<DatagramPacket> outgoing;
+    DatagramPacket[] outgoing;
 
-    public SimpleFTPClientThread(DatagramSocket socket, Deque<DatagramPacket> outgoing) {
+    public SimpleFTPClientThread(DatagramSocket socket, DatagramPacket[] outgoing) {
         this.socket = socket;
         this.outgoing = outgoing;
     }
@@ -23,10 +24,15 @@ public class SimpleFTPClientThread extends Thread {
         DatagramPacket packet = new DatagramPacket(data, data.length);
         while (!socket.isClosed()) {
             try {
-                println(CHANNEL_CLIENT_RECEIVE, "----------- Waiting for ACK ... -----------");
+                format(CHANNEL_CLIENT_RECEIVE, "----------- Waiting for ACK [%d] ... -----------", ack);
                 socket.receive(packet);
+
+                ack = decodeNum(4, data, 0);
+
                 format(CHANNEL_CLIENT_RECEIVE, "<Server>: %s\r\n", bytes2Binary(data, 0, 4));
                 format(CHANNEL_CLIENT_RECEIVE, "<Server>: %s\r\n", bytes2Binary(data, 4, 4));
+            }catch (SocketException e) {
+                println(CHANNEL_CLIENT_RECEIVE, "Thread interrupted!");
             } catch (IOException e) {
                 e.printStackTrace();
             }
