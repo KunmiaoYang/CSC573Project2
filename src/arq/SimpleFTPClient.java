@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import static arq.Util.*;
 
 public class SimpleFTPClient {
-    static long RTO = 8;
+    static long RTO = 80;
     static long ack;
     static long[] timer;
     static int N;
@@ -81,7 +81,7 @@ public class SimpleFTPClient {
         while (ack == seq) {
             socket.send(packet);
             format(CHANNEL_CLIENT_SEND,
-                    "----------- ACK = %d, Send data packet [%d] -----------\r\n",
+                    "----------- Close ACK = %d, Send data packet [%d] -----------\r\n",
                     ack, seq);
             try {
                 TimeUnit.MILLISECONDS.sleep(RTO);

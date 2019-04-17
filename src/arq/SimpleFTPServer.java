@@ -32,7 +32,7 @@ public class SimpleFTPServer {
         DatagramPacket packetSend;
         InetAddress address;
 
-        int checksum, mark = 0, len;
+        int checksum, mark = 0, len, totalWriten = 0;
         Random rand = new Random();
 
         try (OutputStream os = new FileOutputStream(filePath)) {
@@ -51,11 +51,9 @@ public class SimpleFTPServer {
 
                 checksum = (int) decodeNum(2, dataReceived, 4);
                 mark = (int) decodeNum(2, dataReceived, 6);
-                if (END_MARK != mark) {
-                    if (seq != ack) {
-                        format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
-                        continue;
-                    }
+                if (END_MARK == mark) {
+                    ack++;
+                } else if (seq == ack) {
                     format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
                     if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
                         continue;
@@ -63,18 +61,24 @@ public class SimpleFTPServer {
                     // Output to local
                     len = packetReceived.getLength() - HEADER_SIZE;
                     os.write(dataReceived, HEADER_SIZE, len);
+                    totalWriten += len;
                     os.flush();
                     println(CHANNEL_SERVER | CHANNEL_CONTENT,
                             new String(dataReceived, HEADER_SIZE, len));
 
-                    // Artificial delay to simulate network delay
-//                    println(CHANNEL_CLIENT_RECEIVE, "Receive time = " + System.currentTimeMillis());
-                    if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
-//                    println(CHANNEL_CLIENT_RECEIVE, "ACK time = " + System.currentTimeMillis());
+                    // update ack
+                    ack++;
+                } else {
+                    format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
                 }
 
+                // Artificial delay to simulate network delay
+//                println(CHANNEL_CLIENT_RECEIVE, "Receive time = " + System.currentTimeMillis());
+                if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
+//                println(CHANNEL_CLIENT_RECEIVE, "ACK time = " + System.currentTimeMillis());
+
                 // Send ACK
-                encodeNum(++ack, 4, dataSend, 0);
+                encodeNum(ack, 4, dataSend, 0);
                 address = packetReceived.getAddress();
                 clientPort = packetReceived.getPort();
                 packetSend = new DatagramPacket(dataSend, HEADER_SIZE, address, clientPort);
@@ -82,6 +86,7 @@ public class SimpleFTPServer {
                 format(CHANNEL_SERVER, "----------- ACK packet [%d] sent -----------\r\n", ack);
             }
         }
+        println(CHANNEL_SERVER, "File total written: " + totalWriten);
         socket.close();
 
         println(CHANNEL_SERVER, "Server closed!");

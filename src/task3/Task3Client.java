@@ -1,4 +1,4 @@
-package task1;
+package task3;
 
 import arq.SimpleFTPClient;
 
@@ -6,21 +6,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static task1.Task1Server.N_EXP;
+import static task3.Task3Server.N_EXP;
 
-public class Task1Client {
+public class Task3Client {
     private static int WAIT_TIME = 100;
     public static void main(String[] args) throws IOException {
+        args[3] = "64";
         args[4] = "500";
         long start;
         int totalTime, runTime, avgTime;
-        ArrayList<Integer> NList = new ArrayList<>();
+        ArrayList<Double> pList = new ArrayList<>();
         ArrayList<Integer> TimeList = new ArrayList<>();
-        for (int N = 1; N <= 1024; N *= 2) {
-            args[3] = Integer.toString(N);
+        for (double p = 0.01; p <= 0.1; p += 0.01) {
             totalTime = 0;
             for (int i = 0; i < N_EXP; i++) {
-                System.out.format("Test start N = %d, MSS = %s, #%d\r\n", N, args[4], i);
+                System.out.format("Test start p = %f, N = %s, MSS = %s, #%d\r\n", p, args[3], args[4], i);
                 start = System.currentTimeMillis();
 
                 // Run client
@@ -28,7 +28,7 @@ public class Task1Client {
 
                 runTime = (int) (System.currentTimeMillis() - start);
                 totalTime += runTime;
-                System.out.format("Test result N = %d, MSS = %s, #%d, time = %d ms\r\n", N, args[4], i, runTime);
+                System.out.format("Test result p = %f, N = %s, MSS = %s, #%d, time = %d ms\r\n", p, args[3], args[4], i, runTime);
                 try {
                     TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
                 } catch (InterruptedException e) {
@@ -36,11 +36,11 @@ public class Task1Client {
                 }
             }
             avgTime = totalTime/N_EXP;
-            System.out.format("Group result N = %d, MSS = %s, average time = %d ms\r\n", N, args[4], avgTime);
-            NList.add(N);
+            System.out.format("Group result p = %f, N = %s, MSS = %s, average time = %d ms\r\n", p, args[3], args[4], avgTime);
+            pList.add(p);
             TimeList.add(avgTime);
         }
-        System.out.println("N = " + NList);
+        System.out.println("MSS = " + pList);
         System.out.println("time = " + TimeList);
     }
 }
