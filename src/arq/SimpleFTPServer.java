@@ -68,7 +68,9 @@ public class SimpleFTPServer {
                             new String(dataReceived, HEADER_SIZE, len));
 
                     // Artificial delay to simulate network delay
+//                    println(CHANNEL_CLIENT_RECEIVE, "Receive time = " + System.currentTimeMillis());
                     if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
+//                    println(CHANNEL_CLIENT_RECEIVE, "ACK time = " + System.currentTimeMillis());
                 }
 
                 // Send ACK

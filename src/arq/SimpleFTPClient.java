@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import static arq.Util.*;
 
 public class SimpleFTPClient {
-    static long RTO = 5;
+    static long RTO = 80;
     static long ack;
     static long[] timer;
     static int N;
@@ -36,7 +36,7 @@ public class SimpleFTPClient {
 
             byte[] data;
             long p = 0, maxSentSeq = -1, packetSeq, retransTimer, ackCur;
-            for  (; ack < seq || readSize > -1; p++) {
+            while  (ack < seq || readSize > -1) {
                 // create packet
                 if (readSize > -1 && seq - ack < N) {
                     data = new byte[BUFF_SIZE];
@@ -49,7 +49,8 @@ public class SimpleFTPClient {
                 ackCur = ack;
                 retransTimer = maxSentSeq < ackCur?
                         0 : System.currentTimeMillis() -  timer[(int) (ackCur%N)];
-                if (p >= seq || retransTimer > RTO) {
+//                if (p >= seq || retransTimer > RTO) {
+                if (retransTimer > RTO) {
                     format(CHANNEL_CLIENT_SEND, "p = %d, seq = %d, ACK = %d\r\n", p, seq, ackCur);
                     format(CHANNEL_CLIENT_SEND, "RT = %d, ACK = %d\r\n", retransTimer, ackCur);
                     p = ackCur;
@@ -57,20 +58,30 @@ public class SimpleFTPClient {
                     // all packets have been transmited, ack updated after loop condition check.
                     if (ack == seq) break;
                     System.out.println("Timeout, sequence number = " + p);
+                } else if (p >= seq) {
+                    TimeUnit.MILLISECONDS.sleep(RTO - retransTimer + 1);
+                    continue;
                 }
                 DatagramPacket packet = outgoing[(int) (p%N)];
                 data = packet.getData();
 
                 // send packet
                 packetSeq = decodeNum(4, data, 0);
-                timer[(int) (packetSeq%N)] = System.currentTimeMillis();
+                long curTime = System.currentTimeMillis();
+                timer[(int) (packetSeq%N)] = curTime;
                 maxSentSeq = packetSeq;
                 socket.send(packet);
                 format(CHANNEL_CLIENT_SEND,
-                        "----------- ACK = %d, seq = %d, p = %d, RT = %d, Send data packet [%d] -----------\r\n",
-                        ack, seq, p, retransTimer, packetSeq);
+                        "----------- ACK = %d, seq = %d, p = %d, RT = %d, Send data packet [%d], time = %d -----------\r\n",
+                        ack, seq, p, retransTimer, packetSeq, curTime);
                 println(CHANNEL_CLIENT_SEND | CHANNEL_CONTENT, new String(data, HEADER_SIZE, packet.getLength()));
+
+
+                // update p
+                p++;
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         // Send end packet
