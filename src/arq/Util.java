@@ -22,7 +22,7 @@ class Util {
     private static final int MASK16 = 0xFFFF;
     private static final int MASK8 = 0xFF;
 
-    private static final byte[] END_DATA = {
+    private static byte[] dataEnd = {
             0, 0, 0, 0,
             0, 0, END_PACKET, END_PACKET,
     };
@@ -78,9 +78,10 @@ class Util {
                 address, port);
     }
     static DatagramPacket createEndPacket(
-            InetAddress address, int port) {
+            long ack, InetAddress address, int port) {
+        encodeNum(ack, 4, dataEnd, 0);
         return new DatagramPacket(
-                END_DATA, HEADER_SIZE,
+                dataEnd, HEADER_SIZE,
                 address, port);
     }
     static String bytes2Binary(byte[] data, int start, int length) {

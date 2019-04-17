@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.concurrent.TimeUnit;
 
 import static arq.Util.*;
 
@@ -25,6 +26,8 @@ public class SimpleFTPClient {
         DatagramSocket socket = new DatagramSocket();
         InetAddress address = InetAddress.getByName(host);
 
+        int readSize = 0;
+        long seq = 0;
         try (InputStream is = new FileInputStream(filePath)) {
             ack = 0;
             DatagramPacket[] outgoing = new DatagramPacket[N];
@@ -32,8 +35,7 @@ public class SimpleFTPClient {
             thread.start();
 
             byte[] data;
-            int readSize = 0;
-            long seq = 0, p = 0, maxSentSeq = -1, packetSeq, retransTimer, ackCur;
+            long p = 0, maxSentSeq = -1, packetSeq, retransTimer, ackCur;
             for  (; ack < seq || readSize > -1; p++) {
                 // create packet
                 if (readSize > -1 && seq - ack < N) {
@@ -69,13 +71,24 @@ public class SimpleFTPClient {
                         ack, seq, p, retransTimer, packetSeq);
                 println(CHANNEL_CLIENT_SEND | CHANNEL_CONTENT, new String(data, HEADER_SIZE, packet.getLength()));
             }
-            format(CHANNEL_CLIENT_SEND,
-                    "----------- ACK = %d, seq = %d, readSize = %d, Transmission terminated! -----------\r\n",
-                    ack, seq, readSize);
         }
 
         // Send end packet
-        socket.send(createEndPacket(address, serverPort));
+        DatagramPacket packet = createEndPacket(seq, address, serverPort);
+        while (ack == seq) {
+            socket.send(packet);
+            format(CHANNEL_CLIENT_SEND,
+                    "----------- ACK = %d, Send data packet [%d] -----------\r\n",
+                    ack, seq);
+            try {
+                TimeUnit.MILLISECONDS.sleep(RTO);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        format(CHANNEL_CLIENT_SEND,
+                "----------- ACK = %d, seq = %d, readSize = %d, Transmission terminated! -----------\r\n",
+                ack, seq, readSize);
 
         socket.close();
     }

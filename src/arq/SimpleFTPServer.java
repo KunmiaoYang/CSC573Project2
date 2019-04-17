@@ -30,9 +30,9 @@ public class SimpleFTPServer {
         DatagramPacket packetSend;
         InetAddress address;
 
-        int checksum, mark;
+        int checksum, mark = 0;
         Random rand = new Random();
-        for (long ack = 0, seq; true; ) {
+        for (long ack = 0, seq; END_MARK != mark; ) {
             // Receive packet
             format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
             socket.receive(packetReceived);
@@ -47,23 +47,24 @@ public class SimpleFTPServer {
 
             checksum = (int) decodeNum(2, dataReceived, 4);
             mark = (int) decodeNum(2, dataReceived, 6);
-            if (END_MARK == mark) break;
-            if (seq != ack) {
-                format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
-                continue;
+            if (END_MARK != mark) {
+                if (seq != ack) {
+                    format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
+                    continue;
+                }
+                format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
+                if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
+                    continue;
+
+                // Output to local
+                println(CHANNEL_SERVER | CHANNEL_CONTENT, new String(
+                        dataReceived,
+                        HEADER_SIZE,
+                        packetReceived.getLength() - HEADER_SIZE));
+
+                // Artificial delay to simulate network delay
+                if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
             }
-            format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
-            if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
-                continue;
-
-            // Output to local
-            println(CHANNEL_SERVER | CHANNEL_CONTENT, new String(
-                    dataReceived,
-                    HEADER_SIZE,
-                    packetReceived.getLength() - HEADER_SIZE));
-
-            // Artificial delay to simulate network delay
-            if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
 
             // Send ACK
             encodeNum(++ack, 4, dataSend, 0);
