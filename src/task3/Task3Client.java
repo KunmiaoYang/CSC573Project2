@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import static task3.Task3Server.N_EXP;
 
 public class Task3Client {
-    private static int WAIT_TIME = 100;
+    private static int WAIT_TIME = 5000;
     public static void main(String[] args) throws IOException {
         args[3] = "64";
         args[4] = "500";
@@ -20,7 +20,13 @@ public class Task3Client {
         for (double p = 0.01; p <= 0.1; p += 0.01) {
             totalTime = 0;
             for (int i = 0; i < N_EXP; i++) {
+                System.out.println("------------------------------------------------------");
                 System.out.format("Test start p = %f, N = %s, MSS = %s, #%d\r\n", p, args[3], args[4], i);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 start = System.currentTimeMillis();
 
                 // Run client
@@ -28,12 +34,7 @@ public class Task3Client {
 
                 runTime = (int) (System.currentTimeMillis() - start);
                 totalTime += runTime;
-                System.out.format("Test result p = %f, N = %s, MSS = %s, #%d, time = %d ms\r\n", p, args[3], args[4], i, runTime);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                System.out.format("\r\nTest result p = %f, N = %s, MSS = %s, #%d, time = %d ms\r\n", p, args[3], args[4], i, runTime);
             }
             avgTime = totalTime/N_EXP;
             System.out.format("Group result p = %f, N = %s, MSS = %s, average time = %d ms\r\n", p, args[3], args[4], avgTime);

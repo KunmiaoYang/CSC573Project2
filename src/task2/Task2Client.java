@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import static task2.Task2Server.N_EXP;
 
 public class Task2Client {
-    private static int WAIT_TIME = 100;
+    private static int WAIT_TIME = 5000;
     public static void main(String[] args) throws IOException {
         args[3] = "64";
         long start;
@@ -20,7 +20,13 @@ public class Task2Client {
             args[4] = Integer.toString(MSS);
             totalTime = 0;
             for (int i = 0; i < N_EXP; i++) {
+                System.out.println("------------------------------------------------------");
                 System.out.format("Test start N = %s, MSS = %s, #%d\r\n", args[3], args[4], i);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 start = System.currentTimeMillis();
 
                 // Run client
@@ -28,12 +34,7 @@ public class Task2Client {
 
                 runTime = (int) (System.currentTimeMillis() - start);
                 totalTime += runTime;
-                System.out.format("Test result N = %s, MSS = %s, #%d, time = %d ms\r\n", args[3], args[4], i, runTime);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                System.out.format("\r\nTest result N = %s, MSS = %s, #%d, time = %d ms\r\n", args[3], args[4], i, runTime);
             }
             avgTime = totalTime/N_EXP;
             System.out.format("Group result N = %s, MSS = %s, average time = %d ms\r\n", args[3], args[4], avgTime);

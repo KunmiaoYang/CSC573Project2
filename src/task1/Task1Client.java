@@ -20,7 +20,13 @@ public class Task1Client {
             args[3] = Integer.toString(N);
             totalTime = 0;
             for (int i = 0; i < N_EXP; i++) {
+                System.out.println("------------------------------------------------------");
                 System.out.format("Test start N = %d, MSS = %s, #%d\r\n", N, args[4], i);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 start = System.currentTimeMillis();
 
                 // Run client
@@ -28,12 +34,7 @@ public class Task1Client {
 
                 runTime = (int) (System.currentTimeMillis() - start);
                 totalTime += runTime;
-                System.out.format("Test result N = %d, MSS = %s, #%d, time = %d ms\r\n", N, args[4], i, runTime);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(WAIT_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                System.out.format("\r\nTest result N = %d, MSS = %s, #%d, time = %d ms\r\n", N, args[4], i, runTime);
             }
             avgTime = totalTime/N_EXP;
             System.out.format("Group result N = %d, MSS = %s, average time = %d ms\r\n", N, args[4], avgTime);

@@ -10,6 +10,7 @@ public class Task1Server {
         args[2] = "0.05";
         for (int N = 1; N <= 1024; N *= 2) {
             for (int i = 0; i < N_EXP; i++) {
+                System.out.println("\r\n------------------------------------------------------");
                 System.out.format("Test N = %d, p = %s, #%d\r\n", N, args[2], i);
                 SimpleFTPServer.main(args);
             }

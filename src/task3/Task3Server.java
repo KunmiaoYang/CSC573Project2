@@ -10,6 +10,7 @@ public class Task3Server {
         for (double p = 0.01; p <= 0.1; p += 0.01) {
             args[2] = Double.toString(p);
             for (int i = 0; i < N_EXP; i++) {
+                System.out.println("\r\n------------------------------------------------------");
                 System.out.format("Test p = %f, #%d\r\n", p, i);
                 SimpleFTPServer.main(args);
             }

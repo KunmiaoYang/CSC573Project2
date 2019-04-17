@@ -45,7 +45,7 @@ public class SimpleFTPServer {
 
                 // probabilistic loss service
                 if (rand.nextFloat() < p) {
-                    System.out.println("Packet loss, sequence number = " + seq);
+                    System.out.format("\rPacket loss, sequence number = %d", seq);
                     continue;
                 }
 
