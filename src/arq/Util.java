@@ -11,6 +11,7 @@ class Util {
 //    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
 //    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
 //    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
+//    private static int CHANNEL_LIST = CHANNEL_SERVER;
     private static int CHANNEL_LIST = 0;
 
     static final int BUFF_SIZE = 2*1024;

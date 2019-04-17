@@ -1,6 +1,7 @@
 package arq;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
@@ -11,21 +12,12 @@ import java.util.concurrent.TimeUnit;
 import static arq.Util.*;
 
 public class SimpleFTPClient {
-    static long RTO = 80;
+    static long RTO = 8;
     static long ack;
     static long[] timer;
     static int N;
-    public static void main(String[] args) throws IOException {
-        String host = args[0];
-        int serverPort = Integer.parseInt(args[1]);
-        String filePath = args[2];
-        N = Integer.parseInt(args[3]);
-        int MSS = Integer.parseInt(args[4]);
-
-        timer = new long[N];
-        DatagramSocket socket = new DatagramSocket();
-        InetAddress address = InetAddress.getByName(host);
-
+    static int MSS;
+    private static void rdt_send(String filePath, DatagramSocket socket, InetAddress address, int serverPort) throws IOException {
         int readSize = 0;
         long seq = 0;
         try (InputStream is = new FileInputStream(filePath)) {
@@ -80,7 +72,7 @@ public class SimpleFTPClient {
                 // update p
                 p++;
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
 
@@ -100,6 +92,19 @@ public class SimpleFTPClient {
         format(CHANNEL_CLIENT_SEND,
                 "----------- ACK = %d, seq = %d, readSize = %d, Transmission terminated! -----------\r\n",
                 ack, seq, readSize);
+    }
+    public static void main(String[] args) throws IOException {
+        String host = args[0];
+        int serverPort = Integer.parseInt(args[1]);
+        String filePath = args[2];
+        N = Integer.parseInt(args[3]);
+        MSS = Integer.parseInt(args[4]);
+
+        timer = new long[N];
+        DatagramSocket socket = new DatagramSocket();
+        InetAddress address = InetAddress.getByName(host);
+
+        rdt_send(filePath, socket, address, serverPort);
 
         socket.close();
     }
