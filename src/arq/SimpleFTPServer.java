@@ -1,6 +1,8 @@
 package arq;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -30,49 +32,53 @@ public class SimpleFTPServer {
         DatagramPacket packetSend;
         InetAddress address;
 
-        int checksum, mark = 0;
+        int checksum, mark = 0, len;
         Random rand = new Random();
-        for (long ack = 0, seq; END_MARK != mark; ) {
-            // Receive packet
-            format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
-            socket.receive(packetReceived);
 
-            seq = decodeNum(4, dataReceived, 0);
+        try (OutputStream os = new FileOutputStream(filePath)) {
+            for (long ack = 0, seq; END_MARK != mark; ) {
+                // Receive packet
+                format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
+                socket.receive(packetReceived);
 
-            // probabilistic loss service
-            if (rand.nextFloat() < p) {
-                System.out.println("Packet loss, sequence number = " + seq);
-                continue;
-            }
+                seq = decodeNum(4, dataReceived, 0);
 
-            checksum = (int) decodeNum(2, dataReceived, 4);
-            mark = (int) decodeNum(2, dataReceived, 6);
-            if (END_MARK != mark) {
-                if (seq != ack) {
-                    format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
+                // probabilistic loss service
+                if (rand.nextFloat() < p) {
+                    System.out.println("Packet loss, sequence number = " + seq);
                     continue;
                 }
-                format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
-                if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
-                    continue;
 
-                // Output to local
-                println(CHANNEL_SERVER | CHANNEL_CONTENT, new String(
-                        dataReceived,
-                        HEADER_SIZE,
-                        packetReceived.getLength() - HEADER_SIZE));
+                checksum = (int) decodeNum(2, dataReceived, 4);
+                mark = (int) decodeNum(2, dataReceived, 6);
+                if (END_MARK != mark) {
+                    if (seq != ack) {
+                        format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
+                        continue;
+                    }
+                    format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
+                    if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
+                        continue;
 
-                // Artificial delay to simulate network delay
-                if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
+                    // Output to local
+                    len = packetReceived.getLength() - HEADER_SIZE;
+                    os.write(dataReceived, HEADER_SIZE, len);
+                    os.flush();
+                    println(CHANNEL_SERVER | CHANNEL_CONTENT,
+                            new String(dataReceived, HEADER_SIZE, len));
+
+                    // Artificial delay to simulate network delay
+                    if (ARTIFICIAL_DELAY > 0) TimeUnit.MILLISECONDS.sleep(ARTIFICIAL_DELAY);
+                }
+
+                // Send ACK
+                encodeNum(++ack, 4, dataSend, 0);
+                address = packetReceived.getAddress();
+                clientPort = packetReceived.getPort();
+                packetSend = new DatagramPacket(dataSend, HEADER_SIZE, address, clientPort);
+                socket.send(packetSend);
+                format(CHANNEL_SERVER, "----------- ACK packet [%d] sent -----------\r\n", ack);
             }
-
-            // Send ACK
-            encodeNum(++ack, 4, dataSend, 0);
-            address = packetReceived.getAddress();
-            clientPort = packetReceived.getPort();
-            packetSend = new DatagramPacket(dataSend, HEADER_SIZE, address, clientPort);
-            socket.send(packetSend);
-            format(CHANNEL_SERVER, "----------- ACK packet [%d] sent -----------\r\n", ack);
         }
         socket.close();
 
