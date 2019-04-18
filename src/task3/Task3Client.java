@@ -6,11 +6,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import static arq.Util.*;
 import static task3.Task3Server.N_EXP;
 
 public class Task3Client {
     private static int WAIT_TIME = 5000;
     public static void main(String[] args) throws IOException {
+        CHANNEL_LIST &= (~CHANNEL_VERBOSE);
+        CHANNEL_LIST |= CHANNEL_CONCISE;
+
         args[3] = "64";
         args[4] = "500";
         long start;

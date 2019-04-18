@@ -61,7 +61,7 @@ public class SimpleFTPClient {
                 packetSeq = decodeNum(4, data, 0);
                 long curTime = System.currentTimeMillis();
                 timer[(int) (packetSeq%N)] = curTime;
-                maxSentSeq = packetSeq;
+                maxSentSeq = Math.max(maxSentSeq, packetSeq);
                 socket.send(packet);
                 format(CHANNEL_CLIENT_SEND,
                         "----------- ACK = %d, seq = %d, p = %d, RT = %d, Send data packet [%d], time = %d -----------\r\n",

@@ -3,16 +3,18 @@ package arq;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
-class Util {
+public class Util {
     static final int CHANNEL_SERVER = 1;
     static final int CHANNEL_CLIENT_SEND = 2;
     static final int CHANNEL_CLIENT_RECEIVE = 4;
     static final int CHANNEL_CONTENT = 8;
-//    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
-//    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
-//    private static int CHANNEL_LIST = CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
-//    private static int CHANNEL_LIST = CHANNEL_SERVER;
-    private static int CHANNEL_LIST = 0;
+    public static final int CHANNEL_VERBOSE = 16;
+    public static final int CHANNEL_CONCISE = 32;
+//    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
+//    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
+    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
+//    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER;
+//    public static int CHANNEL_LIST = CHANNEL_VERBOSE;
 
     static final int BUFF_SIZE = 2*1024;
     static final int HEADER_SIZE = 8;
@@ -51,7 +53,7 @@ class Util {
         return  (checksum & MASK16)^MASK16;
     }
     static void encodeNum(long num, int bytes, byte[] data, int start) {
-        if (start + bytes >= data.length) return;
+        if (start + bytes > data.length) return;
         for (int i = start + bytes - 1; i >= start; i--, num >>= 8) {
             data[i] = (byte) (num&MASK8);
         }

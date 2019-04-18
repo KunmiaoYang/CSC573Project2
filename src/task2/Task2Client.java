@@ -8,9 +8,14 @@ import java.util.concurrent.TimeUnit;
 
 import static task2.Task2Server.N_EXP;
 
+import static arq.Util.*;
+
 public class Task2Client {
     private static int WAIT_TIME = 5000;
     public static void main(String[] args) throws IOException {
+        CHANNEL_LIST &= (~CHANNEL_VERBOSE);
+        CHANNEL_LIST |= CHANNEL_CONCISE;
+
         args[3] = "64";
         long start;
         int totalTime, runTime, avgTime;

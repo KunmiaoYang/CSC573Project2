@@ -19,16 +19,16 @@ public class SRPServer {
         int serverPort = Integer.parseInt(args[0]);
         String filePath = args[1];
         float p = Float.parseFloat(args[2]);
+        int N = Integer.parseInt(args[3]);
 
         // Init
         int clientPort;
+        DatagramPacket[] incoming = new DatagramPacket[N];
         DatagramSocket socket = new DatagramSocket(serverPort);
-        byte[] dataReceived = new byte[BUFF_SIZE];
         byte[] dataSend = {
                 0, 0, 0, 0,                 // the 32-bit sequence number that is being ACKed
                 0, 0,                       // a 16-bit field that is all zeroes
                 ACK_PACKET, ACK_PACKET};    // a 16-bit field that has the value 1010101010101010
-        DatagramPacket packetReceived = new DatagramPacket(dataReceived, dataReceived.length);
         DatagramPacket packetSend;
         InetAddress address;
 
@@ -37,6 +37,9 @@ public class SRPServer {
 
         try (OutputStream os = new FileOutputStream(filePath)) {
             for (long ack = 0, seq; END_MARK != mark; ) {
+                // new data and packet, so the packets in the incoming queue are not pointing at the same data
+                byte[] dataReceived = new byte[BUFF_SIZE];
+                DatagramPacket packetReceived = new DatagramPacket(dataReceived, dataReceived.length);
                 // Receive packet
                 format(CHANNEL_SERVER, "\r\n----------- Waiting for client data packet [%d] ... -----------\r\n", ack);
                 socket.receive(packetReceived);
@@ -45,7 +48,8 @@ public class SRPServer {
 
                 // probabilistic loss service
                 if (rand.nextFloat() < p) {
-                    System.out.format("\rPacket loss, sequence number = %d", seq);
+                    format(CHANNEL_CONCISE, "\rPacket loss, sequence number = %d", seq);
+                    format(CHANNEL_VERBOSE, "Packet loss, sequence number = %d\r\n", seq);
                     continue;
                 }
 
@@ -53,23 +57,33 @@ public class SRPServer {
                 mark = (int) decodeNum(2, dataReceived, 6);
                 if (END_MARK == mark) {
                     ack++;
-                } else if (seq == ack) {
-                    format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
-                    if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0)
-                        continue;
+                    encodeNum(END_MARK, 2, dataSend, 6);
+                } else if (calcChecksum(checksum, dataReceived, HEADER_SIZE, packetReceived.getLength()) != 0) {
+                    continue;
+                } else if (seq < ack + N) {
+                    incoming[(int) (seq%N)] = packetReceived;
+                    if (seq == ack) {
+                        format(CHANNEL_SERVER, "----------- Data packet [%d] received -----------\r\n", seq);
 
-                    // Output to local
-                    len = packetReceived.getLength() - HEADER_SIZE;
-                    os.write(dataReceived, HEADER_SIZE, len);
-                    totalWriten += len;
-                    os.flush();
-                    println(CHANNEL_SERVER | CHANNEL_CONTENT,
-                            new String(dataReceived, HEADER_SIZE, len));
+                        // Output to local
+                        DatagramPacket packet = packetReceived;
+                        byte[] data = packet.getData();
+                        long packetSeq = decodeNum(4, data, 0);
+                        while (ack == packetSeq) {
+                            len = packet.getLength() - HEADER_SIZE;
+                            os.write(data, HEADER_SIZE, len);
+                            totalWriten += len;
+                            os.flush();
+                            println(CHANNEL_SERVER | CHANNEL_CONTENT,
+                                    new String(data, HEADER_SIZE, len));
 
-                    // update ack
-                    ack++;
-                } else {
-                    format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
+                            if (null == (packet = incoming[(int) ((++ack)%N)])) break;
+                            data = packet.getData();
+                            packetSeq = decodeNum(4, data, 0);
+                        }
+                    } else {
+                        format(CHANNEL_SERVER, "*********** Data packet [%d] received ***********\r\n", seq);
+                    }
                 }
 
                 // Artificial delay to simulate network delay
