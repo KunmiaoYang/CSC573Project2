@@ -9,9 +9,10 @@ import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import static arq.Util.*;
+import static arq.SimpleFTPClient.RTO;
 
 public class SRPClient {
-    static long RTO = 8;
+//    static long RTO = 80;
     static long ack;
     static Long p;
     static long[] timer;
@@ -26,6 +27,7 @@ public class SRPClient {
         return packetSeq;
     }
     private static void rdt_send(String filePath, DatagramSocket socket, InetAddress address, int serverPort) throws IOException {
+        long dup = 0, dup_p = 0;
         int readSize = 0;
         long seq = 0;
         try (InputStream is = new FileInputStream(filePath)) {
@@ -58,8 +60,21 @@ public class SRPClient {
                     // If ack also equals seq, it means this packet is not lost,
                     // all packets have been transmited, ack updated after loop condition check.
                     if (ack == seq) break;
-                    format(CHANNEL_CONCISE, "\rTimeout, sequence number = %d", p);
+                    format(CHANNEL_CONCISE, "\rACK = %d, Timeout, sequence number = %d", ack, p);
                     format(CHANNEL_VERBOSE, "Timeout, sequence number = %d\r\n", p);
+
+                    // Automatic toggle debug mode
+                    if ((CHANNEL_LIST & CHANNEL_CONCISE) > 0) {
+                        if (dup_p != p) {
+                            dup_p = p;
+                            dup = 1;
+                            CHANNEL_LIST = CHANNEL_CONCISE;
+                        } else {
+                            if (++dup > 100)
+                                CHANNEL_LIST |= (CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND);
+                        }
+                    }
+
                 } else if (p >= seq) {
                     TimeUnit.MILLISECONDS.sleep(1);
                     continue;

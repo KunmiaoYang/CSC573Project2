@@ -48,7 +48,7 @@ public class SRPServer {
 
                 // probabilistic loss service
                 if (rand.nextFloat() < p) {
-                    format(CHANNEL_CONCISE, "\rPacket loss, sequence number = %d", seq);
+                    format(CHANNEL_CONCISE, "\rACK = %d, Packet loss, sequence number = %d", ack, seq);
                     format(CHANNEL_VERBOSE, "Packet loss, sequence number = %d\r\n", seq);
                     continue;
                 }

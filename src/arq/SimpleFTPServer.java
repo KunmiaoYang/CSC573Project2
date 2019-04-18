@@ -45,7 +45,8 @@ public class SimpleFTPServer {
 
                 // probabilistic loss service
                 if (rand.nextFloat() < p) {
-                    System.out.format("\rPacket loss, sequence number = %d", seq);
+                    format(CHANNEL_CONCISE, "\rACK = %d, Packet loss, sequence number = %d", ack, seq);
+                    format(CHANNEL_VERBOSE, "Packet loss, sequence number = %d\r\n", seq);
                     continue;
                 }
 

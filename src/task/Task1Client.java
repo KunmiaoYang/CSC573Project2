@@ -1,17 +1,14 @@
 package task;
 
-import arq.SRPClient;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 import static arq.Util.*;
 import static task.ClientUtil.getTask;
 import static task.ClientUtil.test;
-import static task.TaskServer.*;
+import static task.TaskServer.CODE_END;
+import static task.TaskServer.TASK_SERVER_PORT;
 
 public class Task1Client {
     public static void main(String[] args) throws IOException {

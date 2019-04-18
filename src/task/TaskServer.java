@@ -10,7 +10,6 @@ import static arq.Util.*;
 import static task.ClientUtil.getTask;
 
 public class TaskServer {
-    static final int N_EXP = 5;
     static int TASK_SERVER_PORT = 8835;
     static String CODE_READY = "ready";
     static String CODE_END = "end";

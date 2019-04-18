@@ -49,7 +49,8 @@ public class SimpleFTPClient {
                     // If ack also equals seq, it means this packet is not lost,
                     // all packets have been transmited, ack updated after loop condition check.
                     if (ack == seq) break;
-                    System.out.format("\rTimeout, sequence number = %d", p);
+                    format(CHANNEL_CONCISE, "\rACK = %d, Timeout, sequence number = %d", ack, p);
+                    format(CHANNEL_VERBOSE, "Timeout, sequence number = %d\r\n", p);
                 } else if (p >= seq) {
                     TimeUnit.MILLISECONDS.sleep(RTO - retransTimer + 1);
                     continue;
