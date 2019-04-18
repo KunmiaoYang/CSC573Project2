@@ -41,7 +41,7 @@ public class Task3Client {
             pList.add(p);
             TimeList.add(avgTime);
         }
-        System.out.println("MSS = " + pList);
+        System.out.println("p = " + pList);
         System.out.println("time = " + TimeList);
     }
 }
