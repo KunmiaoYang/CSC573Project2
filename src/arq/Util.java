@@ -12,9 +12,9 @@ public class Util {
     public static final int CHANNEL_CONCISE = 32;
 //    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_SEND;
 //    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE;
-    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
+//    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER | CHANNEL_CLIENT_RECEIVE | CHANNEL_CLIENT_SEND;
 //    public static int CHANNEL_LIST = CHANNEL_VERBOSE | CHANNEL_SERVER;
-//    public static int CHANNEL_LIST = CHANNEL_VERBOSE;
+    public static int CHANNEL_LIST = CHANNEL_VERBOSE;
 
     static final int BUFF_SIZE = 2*1024;
     static final int HEADER_SIZE = 8;
@@ -52,13 +52,13 @@ public class Util {
         }
         return  (checksum & MASK16)^MASK16;
     }
-    static void encodeNum(long num, int bytes, byte[] data, int start) {
+    public static void encodeNum(long num, int bytes, byte[] data, int start) {
         if (start + bytes > data.length) return;
         for (int i = start + bytes - 1; i >= start; i--, num >>= 8) {
             data[i] = (byte) (num&MASK8);
         }
     }
-    static long decodeNum(int bytes, byte[] data, int start) {
+    public static long decodeNum(int bytes, byte[] data, int start) {
         if (start + bytes >= data.length) return 0;
         long num = 0;
         for (int i = start; i < start + bytes; i++) {
